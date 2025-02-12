@@ -48,14 +48,21 @@ public class CheckoutController {
 
 	@PostMapping("/placeOrder")
 	public String placeOrder(@Valid Customer customer, BindingResult result, RedirectAttributes redirect) {
-		if (result.hasErrors()) {
-			return "/checkout";
-		}
-		billingService.createOrder(customer, shoppingCartService.getCart());
-		//emailService.sendEmail(customer.getEmail(), "bookstore - Order Confirmation", "Your order has been confirmed.");
-		shoppingCartService.emptyCart();
-		redirect.addFlashAttribute("successMessage", "The order is confirmed, check your email.");
-		return "redirect:/cart";
-	}
+    	if (result.hasErrors()) {
+        	redirect.addFlashAttribute("errorMessage", "Please correct the errors in the form and try again.");
+        	return "redirect:/checkout";
+    }
+    	try {
+        	billingService.createOrder(customer, shoppingCartService.getCart());
+        	emailService.sendEmail(customer.getEmail(), "Order Confirmation", "Your order has been confirmed.");
+        	shoppingCartService.emptyCart();
+        	redirect.addFlashAttribute("successMessage", "The order is confirmed, check your email.");
+    	} catch (Exception e) {
+        	redirect.addFlashAttribute("errorMessage", "An error occurred while placing your order. Please try again.");
+        	return "redirect:/checkout";
+    }
+    	return "redirect:/cart";
+}
+
 
 }
